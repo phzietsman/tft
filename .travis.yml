@@ -24,7 +24,7 @@ script:
   - go vet $(go list ./... | grep -v /vendor/)
   - go test -v -race ./...
   # Only build binaries from the latest Go release.
-  - if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="logshare.." -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
+  - if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
 
 deploy:
   provider: releases
@@ -34,9 +34,9 @@ deploy:
     secure: thi11ysVWd9A3N69SAaoCaaMXqa6ViecZ/k7soIjMhiCHlCJZ+2uSGo+JWrlBIKIY+vaqaILdp2tHjMrCLuSXueD5t06UmGyALS/JncR7NuZTV9AWsFqVUF208NQk0hg7n25UjxOyq/Ez63ct3ywCP4sFRtGKojGxxkoe+rZ3QSzApoAMbdy9Yv47S9R8UfsoS6JF3KWUgtTW8hBcQmqpdChaF2FTCIaoOkAZotkSmNm6I76ZZylKteoRNwjgqgGZrl6shhQpoolVKjDYZNlMvV7ECZCaVMYQZC1JCNCKXK/1YVJI5W+WPhLm0zitPDMMu1i4uRU2F+tiggj2j+al2PEP87cm3i8sm2bGS6xfcH6tJ4DizSZo3gq13AqJfZ45Cta3bGmTKI+bjQKaFdOOPFNSldmC7YUnsyF3b7hkMSENQTFdQZKGev5uFK6nwfFMB8daXTP3LqyB9ki4S06DqGbR5WyXE2gFJtxRtPyVOJhnldD+NN/FDnOuAofRiycN+6TElTAbzFr9l/lNyU03/PzPORY5RgL6bYplQMw5+yKLFvKi8cuO4ITiOhBmKKXsimRsUX6RXQ8tiNieOU2LASdoZmsy0uOHXcq4lKNk3i9DIqOHwpAXn9rpUe1W2h+0YeHHPqsrSmFlRHWOq6FgS+xHY0IYbhzgeIs6bpk8tk=
   file:
   # The names of the binaries to output, based on the -output template passed to gox.
-  - logshare.windows.amd64.exe
-  - logshare.darwin.amd64
-  - logshare.linux.amd64
+  - tft_windows_amd64.exe
+  - tft_darwin_amd64
+  - tft_linux_amd64
   on:
     # What to repository to build
     repo: phzietsman/tft
