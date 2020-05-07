@@ -1,59 +1,95 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-	"os/exec"
+	"io"
+	"os"
 	"strings"
 )
 
 const (
-	InfoColor    = "\033[1;34m%s\033[0m"
-	NoticeColor  = "\033[1;36m%s\033[0m"
-	WarningColor = "\033[1;33m%s\033[0m"
-	ErrorColor   = "\033[1;31m%s\033[0m"
-	DebugColor   = "\033[0;36m%s\033[0m"
+	Blue   = "\033[1;34m%s\033[0m"
+	Teal   = "\033[1;36m%s\033[0m"
+	Yellow = "\033[1;33m%s\033[0m"
+	Red    = "\033[1;31m%s\033[0m"
+	Green  = "\033[1;32m%s\033[0m"
 )
+
+// Expects something like:
+// module.acq_mart_clean.aws_lambda_function.sf_trigger[0]
+func cleanCountResource(s string) string {
+	index := strings.Split(s, "[")
+	return index[0]
+}
+
+// Expects something like:
+// # module.acq_mart_clean.aws_lambda_function.sf_trigger[0] will be updated in-place
+func stripResource(s string) string {
+	words := strings.Fields(strings.TrimSpace(s))
+	// Something weird in how its trimming
+	terraformResource := words[2]
+	return cleanCountResource(terraformResource)
+}
 
 func main() {
 
 	patternPtr := flag.String("pattern", "", "The pattern to filter the resources")
 	modePtr := flag.String("mode", "include", "Either 'exclude' or 'inlcude'")
-	// operationPtr := flag.String("operation", "plan", "Either 'plan' or 'apply'")
 	flag.Parse()
 
-	fmt.Print("Resources matching the pattern ")
-	fmt.Printf(InfoColor, *patternPtr)
-	fmt.Print(" will be ")
-	fmt.Printf(NoticeColor, *modePtr+"d")
-	fmt.Print(" in the terraform plan/apply\n\n")
+	fmt.Println(os.Args)
 
-	app := "terraform"
+	info, _ := os.Stdin.Stat()
 
-	cmd := exec.Command(app, "state", "list")
-	stdout, err := cmd.Output()
-
-	if err != nil {
-		fmt.Println(err.Error())
+	if info.Mode()&os.ModeCharDevice != 0 {
+		fmt.Println("The command is intended to work with pipes.")
+		fmt.Println("Usage: terraform plan | tft")
 		return
 	}
 
-	terraformList := strings.Split(strings.Replace(string(stdout), "\r\n", "\n", -1), "\n")
+	fmt.Print("Resources matching the pattern ")
+	fmt.Printf(Blue, *patternPtr)
+	fmt.Print(" will be ")
+	if *modePtr == "include" {
+		fmt.Printf(Green, *modePtr+"d")
+	} else {
+		fmt.Printf(Red, *modePtr+"d")
+	}
+	fmt.Print(" in the terraform plan/apply\n\n")
 
-	matchedResources := []string{}
-	nonMatchedResources := []string{}
+	reader := bufio.NewReader(os.Stdin)
+	var runes []rune
 
-	for _, s := range terraformList {
+	for {
+		input, _, err := reader.ReadRune()
+		if err != nil && err == io.EOF {
+			break
+		}
+		runes = append(runes, input)
+	}
 
-		if strings.Contains(s, *patternPtr) {
-			matchedResources = append(matchedResources, s)
-		} else {
-			nonMatchedResources = append(nonMatchedResources, s)
+	inputStringArr := strings.Split(strings.Replace(string(runes), "\r\n", "\n", -1), "\n")
+	matchingResources := []string{""}
+	nonMatchingResources := []string{""}
+
+	for _, s := range inputStringArr {
+		if strings.Contains(s, "#") {
+
+			resource := stripResource(s)
+			if strings.Contains(resource, *patternPtr) {
+				matchingResources = append(matchingResources, resource)
+			} else {
+				nonMatchingResources = append(nonMatchingResources, resource)
+			}
 		}
 	}
 
-	fmt.Println(matchedResources)
-	fmt.Println()
-	fmt.Println(nonMatchedResources)
+	if *modePtr == "include" {
+		fmt.Println(strings.Join(matchingResources, " -target="))
+	} else {
+		fmt.Println(strings.Join(nonMatchingResources, " -target="))
+	}
 
 }
