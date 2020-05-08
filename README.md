@@ -1,5 +1,9 @@
 # tft
-terraform targeted applies made easy, aka making easy to do bad things.
+[![Build Status](https://travis-ci.org/phzietsman/tft.svg?branch=master)](https://travis-ci.org/phzietsman/tft)
+
+terraform targeted applies made easy, aka making it easy to do dumb stuff.
+
+![banner](docs/banner.png)
 
 using globs in `-target` is an open issue on [terraform](https://github.com/hashicorp/terraform/issues/2182) and it is not getting a ton of love (probably because it promotes bad behaviour), but sometimes i need to be bad. 
 
@@ -32,15 +36,21 @@ terraform will manage the dependencies and figure out what needs to be applied w
 
 **ALWAYS INSPECT YOUR PLAN BEFORE APPLYING**
 
+to match resources you can use **globs**.
+
 ```sh 
-# I always write out the plan to file, but you could pipe directly into tft
-$ terraform plan > plan.out
 
 # This will include all aws_s3_bucket_policy resources
-$ cat plan | tft -pattern=aws_s3_bucket_policy -mode=include
+$ terraform plan | tft -pattern="*aws_s3_bucket_policy*" -mode=include
+
+# This will include all aws_s3_bucket_policy resources in module something
+$ terraform plan | tft -pattern="module.something.aws_s3_bucket_policy*" -mode=include
+
+# This will include all aws_s3_bucket_policy resources in all modules
+$ terraform plan | tft -pattern="module.*.aws_s3_bucket_policy*" -mode=include
 
 # This will exclude all aws_s3_bucket_policy resources
-$ cat plan | tft -pattern=aws_s3_bucket_policy -mode=exclude
+$ terraform plan | tft -pattern="*aws_s3_bucket_policy*" -mode=exclude
 
 ```
 
@@ -48,12 +58,10 @@ $ cat plan | tft -pattern=aws_s3_bucket_policy -mode=exclude
 
 since i have little to no go knowledge and its only me using this and it is serving its purpose well, i'm not in a hurry to change things, but i'd still like to keep it alive. This is what i'm planning:
 
-- when you pipe `terraform plan` through `tft` you only get feedback at the end when everything is done. i need to print the terraform output to terminal.
 - i want to use some cool cli framework. cause. this looks like a good one: https://github.com/urfave/cli
-- get a handle on the terraform commands and args. then i could run the targeted plan for you and create a better output.
+- ~~get a handle on the terraform commands and args. then i could run the targeted plan for you and create a better output.~~ this is impossible.
 - fix the typos in this doc and use caps.
 - add some tests and error handling. this seems to be the responsible thing to do.
-- maybe change the `-pattern` to accept a globs. this might be handy and it'll make we feel more like a developer.
 - package this for brew
  
 
