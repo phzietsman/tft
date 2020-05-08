@@ -45,7 +45,7 @@ func main() {
 
 	if info.Mode()&os.ModeCharDevice != 0 {
 		fmt.Println("The command is intended to work with pipes.")
-		fmt.Println("Usage: terraform plan | tft")
+		fmt.Println("Usage: terraform plan | tft -pattern=aws_s3_bucket -mode=exclude")
 		return
 	}
 
